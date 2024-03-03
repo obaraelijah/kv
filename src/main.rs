@@ -37,7 +37,6 @@ struct KVStore {
     hooks: Vec<Hook>,
 }
 
-
 impl std::fmt::Display for OpType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let str_rep = match self {
@@ -64,7 +63,7 @@ impl FromStr for OpType {
 fn get_file_location() -> PathBuf {
     match dirs::config_dir() {
         Some(home) => {
-            let store_file_dir_path = home.join("kv");
+            let store_file_dir_path = Path::new(&home).join("kv");
             if !store_file_dir_path.exists() {
                 match std::fs::create_dir_all(&store_file_dir_path) {
                     Ok(_) => {
@@ -79,15 +78,14 @@ fn get_file_location() -> PathBuf {
                             store_file_dir_path.to_string_lossy(),
                             e.to_string()
                         );
-                        eprintln!("{}", err_msg);
+                        print_err(&err_msg[..])
                     }
                 }
             }
-            store_file_dir_path.join("kv.json")
+            Path::new(&store_file_dir_path).join("kv.json")
         }
         None => {
-            eprintln!("Error! Cannot find the config directory!");
-            PathBuf::new()
+            print_err("Error! Cannot find the config directory!");
         }
     }
 }
@@ -109,6 +107,32 @@ fn write_file(m: &KVStore) {
     file.write_all(s.as_bytes()).unwrap();
 }
 
+fn get_key(s: &str, map: &KV) -> Option<String> {
+    map.get(&s.to_owned()).cloned()
+}
+
+fn set_key(k: &str, v: &str, map: &mut KV) {
+    map.insert(k.to_owned(), v.to_owned());
+}
+
+fn del_key(k: &str, map: &mut KV) -> Option<String> {
+    map.remove(&k.to_owned())
+}
+
+fn print_res(s: Option<String>) {
+    match s {
+        Some(s) => println!("{}", s),
+        None => println!(),
+    }
+}
+
+fn print_err(s: &str) -> ! {
+    println!("{}", s);
+    std::process::exit(1);
+}
+
 fn main() {
     println!("Hello World");
 }
+
+
