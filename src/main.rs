@@ -6,12 +6,8 @@ use serde::{Serialize, Deserialize};
 use std::path::{Path, PathBuf};
 use std::fs::OpenOptions;
 
-
-
 use clap::{self, value_t, App, AppSettings, Arg, ArgMatches, SubCommand};
-use dirs;
 use human_panic::{self, setup_panic};
-use serde_json;
 use tabwriter::TabWriter;
 
 type KV = HashMap<String, String>;
@@ -77,7 +73,7 @@ fn get_file_location() -> PathBuf {
                         let err_msg = format!(
                             "Error! Cannot create path {}, error {}",
                             store_file_dir_path.to_string_lossy(),
-                            e.to_string()
+                            e
                         );
                         print_err(&err_msg[..])
                     }
@@ -114,7 +110,7 @@ fn run_command(cmd_name: &str, cmd: &str) {
         Ok(s) => s,
         Err(_) => "bash".to_owned(),
     };
-    if let Err(e) = Command::new(shell).arg("-c").arg(&cmd).spawn() {
+    if let Err(e) = Command::new(shell).arg("-c").arg(cmd).spawn() {
         let err_msg = format!(
             "Error! Failed to run '{}' with error:\n {:?}",
             cmd_name,
