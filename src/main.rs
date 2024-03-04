@@ -8,9 +8,9 @@ use std::fs::OpenOptions;
 
 
 
-use clap::{self, value_t, ArgMatches};
+use clap::{self, value_t, App, AppSettings, Arg, ArgMatches, SubCommand};
 use dirs;
-use human_panic;
+use human_panic::{self, setup_panic};
 use serde_json;
 use tabwriter::TabWriter;
 
@@ -336,5 +336,17 @@ fn run(matches: ArgMatches) {
 }
 
 fn main() {
-    
+    setup_panic!();
+    let matches = App::new("kv")
+        .version("0.2")
+        .author("Elijah Samson (elijahobara357@gmail.com)")
+        .about("Simple key, value storage with hooks.")
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .about("Key-Value Storage with bash command hooks. Add hooks to run commands on variable update.")
+        .subcommand(SubCommand::with_name("list")
+                    .about("List keys, cmds, or hooks.")
+                    .arg(Arg::with_name("to-list")
+                         .takes_value(true)
+                         .required(false)
+                    .possible_values(&["keys", "cmds", "hooks"])));
 }
