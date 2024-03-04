@@ -1,6 +1,4 @@
 use std::env;
-use std::error::Error;
-use std::fmt::format;
 use std::process::Command;
 use std::{collections::HashMap, str::FromStr};
 use std::io::Write;
@@ -14,7 +12,7 @@ use clap;
 use dirs;
 use human_panic;
 use serde_json;
-use tabwriter::{self, TabWriter};
+use tabwriter::TabWriter;
 
 type KV = HashMap<String, String>;
 
@@ -124,6 +122,34 @@ fn run_command(cmd_name: &str, cmd: &str) {
         );
         print_err(&err_msg[..]);
     }
+}
+
+fn run_hooks(key_name: &str, current_op: &OpType) {
+    let kvstore: KVStore = get_store();
+    let hooks_to_run: Vec<&Hook> = kvstore
+        .hooks
+        .iter()
+        .filter(|&x| x.run_on == *current_op && x.key == key_name)
+        .collect();
+    for hook in hooks_to_run {
+        match get_key(&hook.cmd_name[..], &kvstore.cmds) {
+            Some(cmd) => run_command(&hook.cmd_name, &cmd),
+            None => println!("Error! Bad hook! Hook {:?} has no cmd!", hook.name),
+        }
+    }
+}
+
+/// Get the store as KVStore
+fn get_store() -> KVStore {
+    match serde_json::from_reader(get_file()) {
+        Ok(s) => s,
+        Err(_) => Default::default(),
+    }
+}
+
+fn add_hook(name: String, cmd_name: String, run_on: OpType, key: String) {
+    let mut kvstore = get_store();
+
 }
 
 fn get_key(s: &str, map: &KV) -> Option<String> {
