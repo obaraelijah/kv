@@ -239,6 +239,7 @@ fn run(matches: ArgMatches) {
     if let Some(to_list) = matches.subcommand_matches("list") {
         let key = to_list.value_of("to-list");
         let kvstore = get_store();
+
         let print_cmds = |kvstore: &KVStore| {
             let mut start = vec!["Key\t--\tValue".to_owned()];
             let mut to_print = kvstore
@@ -249,5 +250,52 @@ fn run(matches: ArgMatches) {
             start.append(&mut to_print);
             print_aligned(start);
         };
-}
+        
+        let print_keys = |kvstore: &KVStore| {
+            let mut start = vec!["Key\t--\tValue".to_owned()];
+            let mut to_print = kvstore
+                .kvs
+                .iter()
+                .map(|(key, val)| format!("{}\t--\t{}", key, val))
+                .collect::<Vec<String>>();
+            start.append(&mut to_print);
+            print_aligned(start);
+        };
 
+        let print_hooks = |kvstore: &KVStore| {
+            let mut start = vec!["Hook Name\t--\tCmd Name\t--\tTrigger\t--\tKey".to_owned()];
+            let mut to_print = kvstore
+                .hooks
+                .iter()
+                .map(|hook| {
+                    format!(
+                        "{}\t--\t{}\t--\t{}\t--\t{}",
+                        hook.name, hook.cmd_name, hook.run_on, hook.key
+                    )
+                })
+                .collect::<Vec<String>>();
+            start.append(&mut to_print);
+            print_aligned(start);
+        };
+        match key {
+            Some("cmds") => {
+                print_cmds(&kvstore);
+            }
+            Some("keys") => {
+                print_keys(&kvstore);
+            }
+            Some("hooks") => {
+                print_hooks(&kvstore);
+            }
+            None => {
+                print_keys(&kvstore);
+                println!("-------------------");
+                print_cmds(&kvstore);
+                println!("-------------------");
+                print_hooks(&kvstore);
+            }
+            _ => print_err("Error! Unknown subject to list!"),
+        }
+    }
+
+}
