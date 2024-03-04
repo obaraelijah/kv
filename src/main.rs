@@ -149,8 +149,39 @@ fn get_store() -> KVStore {
 
 fn add_hook(name: String, cmd_name: String, run_on: OpType, key: String) {
     let mut kvstore = get_store();
+    if kvstore.hooks.iter().filter(|&x| x.name == name).count() > 0 {
+        let err_msg = format!(
+            "Error! {} already exists. To delete it try\n kv cmd del-hook {}",
+            name, name
+        );
+        print_err(&err_msg[..]);
+    }
+    let new_hook = Hook {
+        name,
+        cmd_name,
+        run_on,
+        key,
+    };
 
+    kvstore.hooks.push(new_hook);
+    write_file(&kvstore)
 }
+
+
+fn rm_hook(name: &str) {
+    let mut kvstore = get_store();
+    match kvstore.hooks.iter().position(|x| x.name == name) {
+        Some(pos) => {
+            kvstore.hooks.remove(pos);
+        }
+        None => {
+            let err_msg = format!("Error! Hook {} does not exist!", name);
+            print_err(&err_msg[..]);
+        }
+    }
+    write_file(&kvstore);
+}
+
 
 fn get_key(s: &str, map: &KV) -> Option<String> {
     map.get(&s.to_owned()).cloned()
@@ -183,8 +214,7 @@ fn print_err(s: &str) -> ! {
     std::process::exit(1);
 }
 
-fn main() {
-    println!("Hello World");
+fn run() {
+    todo!()
 }
-
 
