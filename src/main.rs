@@ -8,7 +8,7 @@ use std::fs::OpenOptions;
 
 
 
-use clap::{self, ArgMatches};
+use clap::{self, value_t, ArgMatches};
 use dirs;
 use human_panic;
 use serde_json;
@@ -298,4 +298,43 @@ fn run(matches: ArgMatches) {
         }
     }
 
+    if let Some(cmd) = matches.subcommand_matches("cmd") {
+        if let Some(m_run) = cmd.subcommand_matches("run") {
+            let cmd_name = m_run.value_of("cmd-name").unwrap();
+            let cmd_value = get_key(cmd_name, &kvstore.cmds);
+            match cmd_value {
+                Some(v) => run_command(cmd_name, &v),
+                None => println!("Error! Command {} does not exist!", cmd_name),
+            }
+        } 
+
+        if let Some(m_add) = cmd.subcommand_matches("add") {
+            let cmd_name = m_add.value_of("cmd-name").unwrap();
+            let cmd_value = m_add.value_of("cmd-value").unwrap();
+            set_key(cmd_name, cmd_value, &mut kvstore.cmds);
+            write_file(&kvstore);
+        }
+
+        if let Some(m_del_hook) = cmd.subcommand_matches("del-hook") {
+            let hook_name = m_del_hook.value_of("hook-name").unwrap();
+            rm_hook(hook_name);
+        }
+
+        if let Some(m_add_hook) = cmd.subcommand_matches("add-hook") {
+            let hook_name = m_add_hook.value_of("hook-name").unwrap();
+            let cmd_name = m_add_hook.value_of("cmd-name").unwrap();
+            let trigger_op = value_t!(m_add_hook, "trigger", OpType).unwrap();
+            let key = m_add_hook.value_of("key").unwrap();
+            add_hook(
+                hook_name.to_owned(),
+                cmd_name.to_owned(),
+                trigger_op,
+                key.to_owned(),
+            )
+        }
+    }
+}
+
+fn main() {
+    
 }
