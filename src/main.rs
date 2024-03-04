@@ -236,6 +236,18 @@ fn run(matches: ArgMatches) {
         print_res(value);
         run_hooks(key, &OpType::Del);
     }
-
+    if let Some(to_list) = matches.subcommand_matches("list") {
+        let key = to_list.value_of("to-list");
+        let kvstore = get_store();
+        let print_cmds = |kvstore: &KVStore| {
+            let mut start = vec!["Key\t--\tValue".to_owned()];
+            let mut to_print = kvstore
+                .cmds
+                .iter()
+                .map(|(key, val)| format!("{}\t--\t{}", key, val))
+                .collect::<Vec<String>>();
+            start.append(&mut to_print);
+            print_aligned(start);
+        };
 }
 
