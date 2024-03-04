@@ -335,11 +335,12 @@ fn run(matches: ArgMatches) {
     }
 }
 
+/// Fooar
 fn main() {
     setup_panic!();
     let matches = App::new("kv")
         .version("0.2")
-        .author("Elijah Samson (elijahobara357@gmail.com)")
+        .author("Elijah Samson(elijahobara357@gmail.com)")
         .about("Simple key, value storage with hooks.")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .about("Key-Value Storage with bash command hooks. Add hooks to run commands on variable update.")
@@ -348,5 +349,107 @@ fn main() {
                     .arg(Arg::with_name("to-list")
                          .takes_value(true)
                          .required(false)
-                    .possible_values(&["keys", "cmds", "hooks"])));
+                    .possible_values(&["keys", "cmds", "hooks"])))
+        .subcommand(
+            SubCommand::with_name("cmd")
+                .setting(AppSettings::SubcommandRequiredElseHelp)
+                .about("Add, and Run bash commands. Add hooks to run commands on variable update.")
+                .subcommand(
+                    SubCommand::with_name("run")
+                        .about("Run commands <cmd-name>")
+                        .arg(Arg::with_name("cmd-name").takes_value(true).required(true)),
+                )
+                .subcommand(
+                    SubCommand::with_name("add")
+                        .about("Add command with name <cmd-name>, and value <cmd-value>")
+                        .arg(Arg::with_name("cmd-name").takes_value(true).required(true))
+                        .arg(Arg::with_name("cmd-value").takes_value(true).required(true)),
+                )
+            .subcommand(
+                SubCommand::with_name("add-hook")
+                    .about("Add hook with name <hook-name> to run <cmd-name> when [key] is updated (kv get, kv set, kv del)")
+                    .arg(Arg::with_name("hook-name").takes_value(true).required(true))
+                    .arg(Arg::with_name("cmd-name").takes_value(true).required(true))
+                    .arg(Arg::with_name("trigger").takes_value(false).required(true).possible_values(&["get", "set", "del"]))
+                    .arg(Arg::with_name("key").takes_value(true).required(true))
+            )
+            .subcommand(
+                SubCommand::with_name("del-hook")
+                    .about("Remove hook with name <hook-name>")
+                    .arg(Arg::with_name("hook-name").takes_value(true).required(true))
+            )
+        )
+        .subcommand(
+            SubCommand::with_name("get")
+                .about("Get key from storage")
+                .help(
+                    r#"kv get <key>
+
+Get the value of <key> from storage
+
+Example:
+~> kv set my-key my-key-value
+~> kv get my-key
+my-key-value
+"#,
+                )
+                .arg(
+                    Arg::with_name("key")
+                        .help("key to get from storage")
+                        .takes_value(true)
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("del")
+                .help(
+                    r#"kv del <key>
+
+Delete <key> in storage (and its value)
+
+Example:
+~> kv set my-key my-key-value
+~> kv del my-key
+~> kv get my-key
+
+~>
+"#,
+                )
+                .about("Delete key and value from storage")
+                .arg(
+                    Arg::with_name("key")
+                        .help("key to delete from storage")
+                        .takes_value(true)
+                        .required(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("set")
+                .about("set key to value in storage")
+                .help(
+                    r#"kv set <key> <val>
+
+Set <key> to <val> in storage.
+
+Example:
+~> kv set my-key my-key-value
+~> kv get my-key
+my-key-value
+"#,
+                )
+                .arg(
+                    Arg::with_name("key")
+                        .help("key to set in storage")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("val")
+                        .help("<val> you wish to set <key> to.")
+                        .takes_value(true)
+                        .required(true),
+                ),
+        )
+        .get_matches();
+    run(matches);
 }
