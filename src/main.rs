@@ -1,4 +1,7 @@
+use std::env;
 use std::error::Error;
+use std::fmt::format;
+use std::process::Command;
 use std::{collections::HashMap, str::FromStr};
 use std::io::Write;
 use serde::{Serialize, Deserialize};
@@ -11,7 +14,7 @@ use clap;
 use dirs;
 use human_panic;
 use serde_json;
-use tabwriter;
+use tabwriter::{self, TabWriter};
 
 type KV = HashMap<String, String>;
 
@@ -107,6 +110,22 @@ fn write_file(m: &KVStore) {
     file.write_all(s.as_bytes()).unwrap();
 }
 
+/// Lets you run a command
+fn run_command(cmd_name: &str, cmd: &str) {
+    let shell = match env::var("SHELL") {
+        Ok(s) => s,
+        Err(_) => "bash".to_owned(),
+    };
+    if let Err(e) = Command::new(shell).arg("-c").arg(&cmd).spawn() {
+        let err_msg = format!(
+            "Error! Failed to run '{}' with error:\n {:?}",
+            cmd_name,
+            e.to_string()
+        );
+        print_err(&err_msg[..]);
+    }
+}
+
 fn get_key(s: &str, map: &KV) -> Option<String> {
     map.get(&s.to_owned()).cloned()
 }
@@ -124,6 +143,13 @@ fn print_res(s: Option<String>) {
         Some(s) => println!("{}", s),
         None => println!(),
     }
+}
+
+fn print_aligned(v: Vec<String>) {
+    let mut t = TabWriter::new(vec![]);
+    write!(&mut t, "{}", v.join("\n")).unwrap();
+    t.flush().unwrap();
+    println!("{}", String::from_utf8(t.into_inner().unwrap()).unwrap());
 }
 
 fn print_err(s: &str) -> ! {
