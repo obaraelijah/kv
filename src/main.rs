@@ -8,7 +8,7 @@ use std::fs::OpenOptions;
 
 
 
-use clap;
+use clap::{self, ArgMatches};
 use dirs;
 use human_panic;
 use serde_json;
@@ -214,7 +214,28 @@ fn print_err(s: &str) -> ! {
     std::process::exit(1);
 }
 
-fn run() {
-    todo!()
+fn run(matches: ArgMatches) {
+    let mut kvstore = get_store();
+    if let Some(get) = matches.subcommand_matches("get") {
+        let key = get.value_of("key").unwrap();
+        let value = get_key(key, &kvstore.kvs);
+        print_res(value);
+        run_hooks(key, &OpType::Get);
+    }
+    if let Some(set) = matches.subcommand_matches("set") {
+        let key = set.value_of("key").unwrap();
+        let value = set.value_of("val").unwrap();
+        set_key(key, value, &mut kvstore.kvs);
+        write_file(&kvstore);
+        run_hooks(key, &OpType::Set);
+    }
+    if let Some(del) = matches.subcommand_matches("del") {
+        let key = del.value_of("key").unwrap();
+        let value = del_key(key, &mut kvstore.kvs);
+        write_file(&kvstore);
+        print_res(value);
+        run_hooks(key, &OpType::Del);
+    }
+
 }
 
